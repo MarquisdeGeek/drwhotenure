@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Doctor Who Tenure Chart</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 20px;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+    }
+
+    .bar {
+      fill: #4682b4;
+      rx: 4;
+      ry: 4;
+    }
+
+    .bar:hover {
+      fill: #ff7f50;
+    }
+
+    .axis text {
+      font-size: 12px;
+    }
+
+    .tooltip {
+      position: absolute;
+      background: white;
+      border: 1px solid #666;
+      padding: 6px 10px;
+      font-size: 13px;
+      border-radius: 5px;
+      pointer-events: none;
+      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <h2>Doctor Who: Tenure by Age (Years, Months, Days)</h2>
+  <svg></svg>
+
+  <script>
+    const parseDate = d3.timeParse("%Y-%m-%d");
+
+    const data = [
+      { name: "William Hartnell", dob: "1908-01-08", start: "1963-11-23", end: "1966-10-29" },
+      { name: "Patrick Troughton", dob: "1920-03-25", start: "1966-11-05", end: "1969-06-21" },
+      { name: "Jon Pertwee", dob: "1919-07-07", start: "1970-01-03", end: "1974-06-08" },
+      { name: "Tom Baker", dob: "1934-01-20", start: "1974-12-28", end: "1981-03-21" },
+      { name: "Peter Davison", dob: "1951-04-13", start: "1982-01-04", end: "1984-03-16" },
+      { name: "Colin Baker", dob: "1943-06-08", start: "1984-03-22", end: "1986-12-06" },
+      { name: "Sylvester McCoy", dob: "1943-08-20", start: "1987-09-07", end: "1989-12-06" },
+      { name: "Paul McGann", dob: "1959-11-14", start: "1996-05-27", end: "1996-05-27" },
+      { name: "Christopher Eccleston", dob: "1964-02-16", start: "2005-03-26", end: "2005-06-18" },
+      { name: "David Tennant (10th)", dob: "1971-04-18", start: "2005-12-25", end: "2010-01-01" },
+      { name: "Matt Smith", dob: "1982-10-28", start: "2010-04-03", end: "2013-12-25" },
+      { name: "Peter Capaldi", dob: "1958-04-14", start: "2014-08-23", end: "2017-12-25" },
+      { name: "Jodie Whittaker", dob: "1982-06-17", start: "2018-10-07", end: "2022-10-23" },
+      { name: "David Tennant (14th)", dob: "1971-04-18", start: "2023-11-25", end: "2023-12-09" },
+      { name: "Ncuti Gatwa", dob: "1992-10-15", start: "2023-12-25", end: "2025-05-31" }
+    ];
+
+    // Compute age in Y/M/D
+    function getAgeDiff(start, dob) {
+      const s = new Date(start), b = new Date(dob);
+      let y = s.getFullYear() - b.getFullYear();
+      let m = s.getMonth() - b.getMonth();
+      let d = s.getDate() - b.getDate();
+      if (d < 0) { m--; d += new Date(s.getFullYear(), s.getMonth(), 0).getDate(); }
+      if (m < 0) { y--; m += 12; }
+      return `${y}y ${m}m ${d}d`;
+    }
+
+    // Add calculated fields
+    data.forEach(d => {
+      d.startDate = new Date(d.start);
+      d.endDate = new Date(d.end);
+      d.tenureDays = Math.round((d.endDate - d.startDate) / (1000 * 60 * 60 * 24)) + 1;
+      d.startAge = getAgeDiff(d.start, d.dob);
+      d.endAge = getAgeDiff(d.end, d.dob);
+      d.startAgeNum = (d.startDate - new Date(d.dob)) / (1000 * 60 * 60 * 24 * 365.25);
+      d.endAgeNum = (d.endDate - new Date(d.dob)) / (1000 * 60 * 60 * 24 * 365.25);
+    });
+
+    const svg = d3.select("svg");
+    const margin = { top: 40, right: 40, bottom: 40, left: 200 };
+    const width = window.innerWidth - margin.left - margin.right;
+    const height = 40 * data.length;
+
+    svg.attr("height", height + margin.top + margin.bottom);
+
+    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleLinear()
+      .domain([d3.min(data, d => d.startAgeNum) - 1, d3.max(data, d => d.endAgeNum) + 1])
+      .range([0, width]);
+
+    const y = d3.scaleBand()
+      .domain(data.map(d => d.name))
+      .range([0, height])
+      .padding(0.2);
+
+    g.append("g").call(d3.axisLeft(y));
+
+    g.append("g")
+      .attr("transform", `translate(0,${height})`)
+      .call(d3.axisBottom(x).ticks(10).tickFormat(d => `${Math.floor(d)}y`));
+
+    const tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+
+    g.selectAll(".bar")
+      .data(data)
+      .enter()
+      .append("rect")
+        .attr("class", "bar")
+        .attr("y", d => y(d.name))
+        .attr("x", d => x(d.startAgeNum))
+        .attr("width", d => x(d.endAgeNum) - x(d.startAgeNum))
+        .attr("height", y.bandwidth())
+        .on("mouseover", (e, d) => {
+          tooltip.transition().duration(150).style("opacity", 0.95);
+          tooltip.html(`
+            <strong>${d.name}</strong><br/>
+            Start: ${d.start} (${d.startAge})<br/>
+            End: ${d.end} (${d.endAge})<br/>
+            Tenure: ${d.tenureDays} days
+          `)
+          .style("left", (e.pageX + 12) + "px")
+          .style("top", (e.pageY - 28) + "px");
+        })
+        .on("mouseout", () => tooltip.transition().duration(200).style("opacity", 0));
+  </script>
+</body>
+</html>
