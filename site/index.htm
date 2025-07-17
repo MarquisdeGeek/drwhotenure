@@ -123,7 +123,7 @@
         .attr("class", "bar")
         .attr("y", d => y(d.name))
         .attr("x", d => x(d.startAgeNum))
-        .attr("width", d => x(d.endAgeNum) - x(d.startAgeNum))
+        .attr("width", d => Math.max(3, x(d.endAgeNum) - x(d.startAgeNum)))
         .attr("height", y.bandwidth())
         .on("mouseover", (e, d) => {
           tooltip.transition().duration(150).style("opacity", 0.95);
