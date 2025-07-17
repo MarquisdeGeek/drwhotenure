@@ -58,6 +58,7 @@
   </head>
   <body>
     <svg></svg>
+    <button id="toggle-extras">Hide Specials</button><br>
 
     <script>
       const actors = [
@@ -134,6 +135,14 @@
           ],
         },
         {
+          name: "John Hurt",
+          birth: "1940-01-22",
+          tenures: [
+              { start: "2013-05-18", end: "2013-05-18", tenureName: "The Name of the Doctor" },
+              { start: "2013-11-23", end: "2013-11-23", tenureName: "The Day of the Doctor" }
+          ]
+        },
+        {
           name: "Christopher Eccleston",
           birth: "1964-02-16",
           tenures: [{ start: "2005-03-26", end: "2005-07-30", tenureName: "Primary" }],
@@ -165,6 +174,16 @@
           name: "Jodie Whittaker",
           birth: "1982-06-17",
           tenures: [{ start: "2017-10-07", end: "2022-11-23", tenureName: "Primary" }],
+        },
+        {
+        name: "Jo Martin",
+        birth: "1979-04-29",
+        tenures: [
+            { start: "2020-01-26", end: "2020-01-26", tenureName: "Fugitive of the Judoon" },
+            { start: "2020-03-01", end: "2020-03-01", tenureName: "The Timeless Children" },
+            { start: "2021-11-14", end: "2021-11-14", tenureName: "Once, Upon Time" },
+            { start: "2022-10-23", end: "2022-10-23", tenureName: "The Power of the Doctor" }
+        ]
         },
         {
           name: "Ncuti Gatwa",
@@ -349,6 +368,19 @@
       // Y Axis
       const yAxis = d3.axisLeft(y);
       svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`).attr("class", "axis").call(yAxis);
+
+        let showExtras = true;
+
+        d3.select("#toggle-extras").on("click", function () {
+        showExtras = !showExtras;
+        d3.selectAll("rect.special")
+            .style("opacity", showExtras ? 1 : 0);
+
+        d3.select(this).text(showExtras ? "Hide Extras" : "Show Extras");
+        });
+
     </script>
+
+
   </body>
 </html>
