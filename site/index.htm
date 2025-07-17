@@ -1,142 +1,354 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Doctor Who Tenure Chart</title>
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f8f9fa;
-      margin: 0;
-      padding: 20px;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <title>Doctor Who Actor Ages</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 0;
+      }
 
-    svg {
-      width: 100%;
-      height: auto;
-    }
+      svg {
+        width: 100%;
+        height: auto;
+      }
 
-    .bar {
-      fill: #4682b4;
-      rx: 4;
-      ry: 4;
-    }
+      .bar {
+        fill: steelblue;
+        rx: 4;
+        ry: 4;
+      }
 
-    .bar:hover {
-      fill: #ff7f50;
-    }
+      .special {
+        fill: orange;
+        stroke: black;
+        stroke-width: 1px;
+        rx: 4;
+        ry: 4;
+      }
 
-    .axis text {
-      font-size: 12px;
-    }
+      .axis text {
+        font-size: 11px;
+      }
 
-    .tooltip {
-      position: absolute;
-      background: white;
-      border: 1px solid #666;
-      padding: 6px 10px;
-      font-size: 13px;
-      border-radius: 5px;
-      pointer-events: none;
-      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
-    }
-  </style>
-</head>
-<body>
-  <h2>Doctor Who: Tenure by Age (Years, Months, Days)</h2>
-  <svg></svg>
+      .axis path,
+      .axis line {
+        stroke: #888;
+      }
 
-  <script>
-    const parseDate = d3.timeParse("%Y-%m-%d");
+      .row-shade {
+        fill: #e5e5e5;
+      }
 
-    const data = [
-      { name: "William Hartnell", dob: "1908-01-08", start: "1963-11-23", end: "1966-10-29" },
-      { name: "Patrick Troughton", dob: "1920-03-25", start: "1966-11-05", end: "1969-06-21" },
-      { name: "Jon Pertwee", dob: "1919-07-07", start: "1970-01-03", end: "1974-06-08" },
-      { name: "Tom Baker", dob: "1934-01-20", start: "1974-12-28", end: "1981-03-21" },
-      { name: "Peter Davison", dob: "1951-04-13", start: "1982-01-04", end: "1984-03-16" },
-      { name: "Colin Baker", dob: "1943-06-08", start: "1984-03-22", end: "1986-12-06" },
-      { name: "Sylvester McCoy", dob: "1943-08-20", start: "1987-09-07", end: "1989-12-06" },
-      { name: "Paul McGann", dob: "1959-11-14", start: "1996-05-27", end: "1996-05-27" },
-      { name: "Christopher Eccleston", dob: "1964-02-16", start: "2005-03-26", end: "2005-06-18" },
-      { name: "David Tennant (10th)", dob: "1971-04-18", start: "2005-12-25", end: "2010-01-01" },
-      { name: "Matt Smith", dob: "1982-10-28", start: "2010-04-03", end: "2013-12-25" },
-      { name: "Peter Capaldi", dob: "1958-04-14", start: "2014-08-23", end: "2017-12-25" },
-      { name: "Jodie Whittaker", dob: "1982-06-17", start: "2018-10-07", end: "2022-10-23" },
-      { name: "David Tennant (14th)", dob: "1971-04-18", start: "2023-11-25", end: "2023-12-09" },
-      { name: "Ncuti Gatwa", dob: "1992-10-15", start: "2023-12-25", end: "2025-05-31" }
-    ];
+      .tooltip {
+        position: absolute;
+        background: #fff;
+        border: 1px solid #ccc;
+        padding: 6px 10px;
+        border-radius: 6px;
+        pointer-events: none;
+        font-size: 12px;
+        box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+        opacity: 0;
+        z-index: 9999;
+      }
+    </style>
+  </head>
+  <body>
+    <svg></svg>
 
-    // Compute age in Y/M/D
-    function getAgeDiff(start, dob) {
-      const s = new Date(start), b = new Date(dob);
-      let y = s.getFullYear() - b.getFullYear();
-      let m = s.getMonth() - b.getMonth();
-      let d = s.getDate() - b.getDate();
-      if (d < 0) { m--; d += new Date(s.getFullYear(), s.getMonth(), 0).getDate(); }
-      if (m < 0) { y--; m += 12; }
-      return `${y}y ${m}m ${d}d`;
-    }
+    <script>
+      const actors = [
+        {
+          name: "William Hartnell",
+          birth: "1908-01-08",
+          tenures: [
+            { start: "1963-11-23", end: "1966-10-29", tenureName: "Primary" },
+            { start: "1972-12-30", end: "1973-01-20", tenureName: "The Three Doctors" },
+            { start: "1983-11-25", end: "1983-11-25", tenureName: "The Five Doctors" },
+          ],
+        },
+        {
+          name: "Patrick Troughton",
+          birth: "1920-03-25",
+          tenures: [
+            { start: "1966-10-29", end: "1969-06-21", tenureName: "Primary" },
+            { start: "1983-11-25", end: "1983-11-25", tenureName: "The Five Doctors" },
+            { start: "1985-12-25", end: "1985-12-25", tenureName: "The Two Doctors" },
+          ],
+        },
+        {
+          name: "Jon Pertwee",
+          birth: "1919-07-07",
+          tenures: [
+            { start: "1970-01-03", end: "1974-06-08", tenureName: "Primary" },
+            { start: "1983-11-25", end: "1983-11-25", tenureName: "The Five Doctors" },
+            { start: "1985-12-25", end: "1985-12-25", tenureName: "The Two Doctors" },
+          ],
+        },
+        {
+          name: "Tom Baker",
+          birth: "1934-01-20",
+          tenures: [
+            { start: "1974-12-28", end: "1981-03-21", tenureName: "Primary" },
+            { start: "2013-11-23", end: "2013-11-23", tenureName: "The Day of the Doctor" },
+          ],
+        },
+        {
+          name: "Peter Davison",
+          birth: "1951-04-13",
+          tenures: [
+            { start: "1982-01-03", end: "1984-03-25", tenureName: "Primary" },
+            { start: "2007-11-16", end: "2007-11-16", tenureName: "Time Crash" }, // special episode with David Tennant
+            { start: "2013-11-23", end: "2013-11-23", tenureName: "The Five(ish) Doctors Reboot" }, // charity meta special
+            { start: "2022-10-01", end: "2022-10-01", tenureName: "The Power of the Doctor" },
+          ],
+        },
 
-    // Add calculated fields
-    data.forEach(d => {
-      d.startDate = new Date(d.start);
-      d.endDate = new Date(d.end);
-      d.tenureDays = Math.round((d.endDate - d.startDate) / (1000 * 60 * 60 * 24)) + 1;
-      d.startAge = getAgeDiff(d.start, d.dob);
-      d.endAge = getAgeDiff(d.end, d.dob);
-      d.startAgeNum = (d.startDate - new Date(d.dob)) / (1000 * 60 * 60 * 24 * 365.25);
-      d.endAgeNum = (d.endDate - new Date(d.dob)) / (1000 * 60 * 60 * 24 * 365.25);
-    });
+        {
+          name: "Colin Baker",
+          birth: "1943-06-08",
+          tenures: [
+            { start: "1984-03-31", end: "1986-12-06", tenureName: "Primary" },
+            { start: "2022-10-01", end: "2022-10-01", tenureName: "The Power of the Doctor" },
+          ],
+        },
+        {
+          name: "Sylvester McCoy",
+          birth: "1943-08-20",
+          tenures: [
+            { start: "1987-08-07", end: "1989-12-06", tenureName: "Primary" },
+            { start: "1993-11-25", end: "1993-11-25", tenureName: "Dimensions in Time" },
+            { start: "2022-10-01", end: "2022-10-01", tenureName: "The Power of the Doctor" },
+          ],
+        },
+        {
+          name: "Paul McGann",
+          birth: "1959-11-14",
+          tenures: [
+            { start: "1996-05-12", end: "1996-05-12", tenureName: "TV Movie" },
+            { start: "2013-11-23", end: "2013-11-23", tenureName: "The Night of the Doctor" },
+            { start: "2022-10-01", end: "2022-10-01", tenureName: "The Power of the Doctor" },
+          ],
+        },
+        {
+          name: "Christopher Eccleston",
+          birth: "1964-02-16",
+          tenures: [{ start: "2005-03-26", end: "2005-07-30", tenureName: "Primary" }],
+        },
+        {
+          name: "David Tennant",
+          birth: "1971-04-18",
+          tenures: [
+            { start: "2005-04-30", end: "2010-01-01", tenureName: "Primary" },
+            { start: "2013-11-23", end: "2013-11-23", tenureName: "The Day of the Doctor" },
+            { start: "2022-10-01", end: "2022-10-01", tenureName: "The Power of the Doctor" },
+          ],
+        },
+        {
+          name: "Matt Smith",
+          birth: "1982-10-28",
+          tenures: [
+            { start: "2010-04-03", end: "2013-12-25", tenureName: "Primary" },
+            { start: "2013-11-23", end: "2013-11-23", tenureName: "The Day of the Doctor" },
+            { start: "2022-10-01", end: "2022-10-01", tenureName: "The Power of the Doctor" },
+          ],
+        },
+        {
+          name: "Peter Capaldi",
+          birth: "1958-04-14",
+          tenures: [{ start: "2013-08-23", end: "2017-12-25", tenureName: "Primary" }],
+        },
+        {
+          name: "Jodie Whittaker",
+          birth: "1982-06-17",
+          tenures: [{ start: "2017-10-07", end: "2022-11-23", tenureName: "Primary" }],
+        },
+        {
+          name: "Ncuti Gatwa",
+          birth: "1992-10-15",
+          tenures: [{ start: "2023-05-20", end: "2025-07-17", tenureName: "Primary" }],
+        },
+      ];
 
-    const svg = d3.select("svg");
-    const margin = { top: 40, right: 40, bottom: 40, left: 200 };
-    const width = window.innerWidth - margin.left - margin.right;
-    const height = 40 * data.length;
+      function dateDiffYears(start, end) {
+        return (end - start) / (1000 * 60 * 60 * 24 * 365.25);
+      }
 
-    svg.attr("height", height + margin.top + margin.bottom);
+      function getAgeParts(start, end) {
+        const s = new Date(start);
+        const e = new Date(end);
+        let years = e.getFullYear() - s.getFullYear();
+        let months = e.getMonth() - s.getMonth();
+        let days = e.getDate() - s.getDate();
 
-    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+        if (days < 0) {
+          months -= 1;
+          days += new Date(e.getFullYear(), e.getMonth(), 0).getDate();
+        }
+        if (months < 0) {
+          years -= 1;
+          months += 12;
+        }
 
-    const x = d3.scaleLinear()
-      .domain([d3.min(data, d => d.startAgeNum) - 1, d3.max(data, d => d.endAgeNum) + 1])
-      .range([0, width]);
+        return { years, months, days };
+      }
 
-    const y = d3.scaleBand()
-      .domain(data.map(d => d.name))
-      .range([0, height])
-      .padding(0.2);
+      function formatAge(age) {
+        return `${age.years}y ${age.months}m ${age.days}d`;
+      }
 
-    g.append("g").call(d3.axisLeft(y));
+      const margin = { top: 20, right: 20, bottom: 40, left: 160 };
+      const barHeight = 28;
+      const width = window.innerWidth - margin.left - margin.right;
+      const height = actors.length * barHeight + margin.top + margin.bottom;
 
-    g.append("g")
-      .attr("transform", `translate(0,${height})`)
-      .call(d3.axisBottom(x).ticks(10).tickFormat(d => `${Math.floor(d)}y`));
+      const svg = d3
+        .select("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height);
 
-    const tooltip = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+      const tooltip = d3.select("body").append("div").attr("class", "tooltip");
 
-    g.selectAll(".bar")
-      .data(data)
-      .enter()
-      .append("rect")
-        .attr("class", "bar")
-        .attr("y", d => y(d.name))
-        .attr("x", d => x(d.startAgeNum))
-        .attr("width", d => Math.max(3, x(d.endAgeNum) - x(d.startAgeNum)))
-        .attr("height", y.bandwidth())
-        .on("mouseover", (e, d) => {
-          tooltip.transition().duration(150).style("opacity", 0.95);
-          tooltip.html(`
-            <strong>${d.name}</strong><br/>
-            Start: ${d.start} (${d.startAge})<br/>
-            End: ${d.end} (${d.endAge})<br/>
-            Tenure: ${d.tenureDays} days
-          `)
-          .style("left", (e.pageX + 12) + "px")
-          .style("top", (e.pageY - 28) + "px");
+      const tenures = actors.flatMap((actor, i) => {
+        const birth = new Date(actor.birth);
+        const startFirstTenure = actor.tenures[0].start;
+
+        return actor.tenures.map((t) => {
+          const start = new Date(t.start);
+          const end = new Date(t.end);
+
+          return {
+            actor: actor.name,
+            birth,
+            start,
+            end,
+            tenureName: t.tenureName,
+            startAgeYears: dateDiffYears(birth, start),
+            endAgeYears: dateDiffYears(birth, end),
+            startAgeParts: getAgeParts(birth, start),
+            endAgeParts: getAgeParts(birth, end),
+            durationParts: getAgeParts(start, end),
+            durationToDate: getAgeParts(startFirstTenure, end),
+            isSpecial: t.start === t.end,
+            row: i,
+          };
+        });
+      });
+
+      // --- Calculate gaps between tenures of the same actor ---
+      const gaps = [];
+      for (let i = 1; i < tenures.length; i++) {
+        const prev = tenures[i - 1];
+        const curr = tenures[i];
+        if (prev.actor === curr.actor) {
+          const gapDays = (curr.start - prev.end) / (1000 * 60 * 60 * 24);
+          if (gapDays > 0) {
+            gaps.push({
+              actor: curr.actor,
+              birth: curr.birth,
+              start: prev.end,
+              end: curr.start,
+              gapDays,
+              row: curr.row,
+            });
+          }
+        }
+      }
+
+      const minAge = d3.min(tenures, (d) => d.startAgeYears);
+      const maxAge = d3.max(tenures, (d) => d.endAgeYears);
+      const x = d3
+        .scaleLinear()
+        .domain([Math.floor(minAge), Math.ceil(maxAge)])
+        .range([0, width]);
+
+      const xAxis = d3
+        .axisBottom(x)
+        .ticks(10)
+        .tickFormat((d) => `${d} yrs`);
+      svg
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${height - margin.bottom})`)
+        .attr("class", "axis")
+        .call(xAxis);
+
+      const y = d3
+        .scaleBand()
+        .domain(actors.map((d) => d.name))
+        .range([0, actors.length * barHeight])
+        .padding(0.1);
+
+      // Alternate row shading
+      svg
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+        .selectAll("rect.row-shade")
+        .data(actors)
+        .enter()
+        .append("rect")
+        .attr("class", "row-shade")
+        .attr("x", 0)
+        .attr("y", (d, i) => i * barHeight)
+        .attr("width", width)
+        .attr("height", barHeight)
+        .style("opacity", (d, i) => (i % 2 === 0 ? 0.2 : 0));
+
+      // Bars with tooltip
+      svg
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+        .selectAll("rect.bar")
+        .data(tenures)
+        .enter()
+        .append("rect")
+        .attr("x", (d) => x(d.startAgeYears))
+        .attr("y", (d) => d.row * barHeight + 4)
+        .attr("width", (d) => Math.max(4, x(d.endAgeYears) - x(d.startAgeYears)))
+        .attr("height", barHeight - 8)
+        .attr("class", (d) => (d.isSpecial ? "special" : "bar"))
+        .on("mouseover", function (event, d2) {
+          const d = d3.select(this).datum();
+          tooltip.style("opacity", 1).html(`
+        <strong>${d.actor}</strong> (${d.tenureName})<br/>
+        Start Age: ${formatAge(d.startAgeParts)}<br/>
+        End Age: ${formatAge(d.endAgeParts)}<br/>
+        Duration: ${formatAge(d.durationParts)} / ${formatAge(d.durationToDate)}
+      `);
+          d3.select(this).attr("stroke", "#333").attr("stroke-width", 2);
         })
-        .on("mouseout", () => tooltip.transition().duration(200).style("opacity", 0));
-  </script>
-</body>
+        .on("mousemove", function (event) {
+          const d = d3.select(this).datum();
+
+          const tooltipWidth = tooltip.node().offsetWidth;
+          const tooltipHeight = tooltip.node().offsetHeight;
+
+          const barX = x(d.startAgeYears) + margin.left;
+          const barWidth = Math.max(10, x(d.endAgeYears) - x(d.startAgeYears));
+          const barY = d.row * barHeight + margin.top;
+
+          // Center tooltip above bar
+          let left = barX + barWidth / 2 - tooltipWidth / 2;
+          let top = barY - tooltipHeight - 8;
+
+          // Clamp left so tooltip is not off-screen horizontally
+          left = Math.max(5, Math.min(left, window.innerWidth - tooltipWidth - 5));
+
+          // Clamp top so tooltip is not off-screen vertically (optional)
+          top = Math.max(5, top);
+
+          tooltip.style("left", `${left}px`).style("top", `${top}px`);
+        })
+        .on("mouseout", function () {
+          tooltip.style("opacity", 0);
+          d3.select(this).attr("stroke", null);
+        });
+
+      // Y Axis
+      const yAxis = d3.axisLeft(y);
+      svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`).attr("class", "axis").call(yAxis);
+    </script>
+  </body>
 </html>
